@@ -21,6 +21,53 @@ PImage finger;
 //Variables for my silly implementation. You can delete this:
 char currentLetter = 'a';
 
+float lbScale = 25; //hieght and width of letter bubbles
+float lbXDistance = 0; //x distance between letter bubbles
+float lbYDistance = 0; //y distance between letter bubbles
+
+int textSize = 16; //size of letter in the button
+float textXOffset = 2;
+float textYOffset = 2;
+
+int[] buttonColor = {255,0,0};
+int[] textColor = {255,255,255};
+//offset to move x of each row in to mimick a real keyboard
+float rowOffset = 5;
+
+class LetterBubble {
+  char letter;
+  float x; 
+  float y; 
+  float scale = lbScale;
+  LetterBubble(char _letter, float _x, float _y){
+    letter = _letter;
+    x = _x;
+    y = _y;
+  }
+  
+}
+
+
+ArrayList<LetterBubble> topRow;
+ArrayList<LetterBubble> middleRow;
+ArrayList<LetterBubble> bottomRow;
+ArrayList<LetterBubble> allLetterBubbles = new ArrayList<LetterBubble>();
+
+ArrayList<LetterBubble> initializeLetterBubbles(String letters, float startX, float y, float bubbleDist){
+  float x = startX;
+  ArrayList<LetterBubble> letterBubbleList= new ArrayList<LetterBubble>();
+  for(int i = 0; i < letters.length(); i++){
+    char currLetter = letters.charAt(i);
+    LetterBubble newLB = new LetterBubble(currLetter, x, y);
+    letterBubbleList.add(newLB);
+    //add to master list
+    allLetterBubbles.add(newLB);
+    x += lbScale + bubbleDist;
+  }
+  
+  return letterBubbleList;
+}
+
 //You can modify anything in here. This is just a basic implementation.
 void setup()
 {
@@ -35,7 +82,26 @@ void setup()
   size(800, 800); //Sets the size of the app. You should modify this to your device's native size. Many phones today are 1080 wide by 1920 tall.
   textFont(createFont("Arial", 24)); //set the font to arial 24. Creating fonts is expensive, so make difference sizes once in setup, not draw
   noStroke(); //my code doesn't use any strokes
+  
+  float leftEdge = width/2 - sizeOfInputArea/2 + lbScale/2;
+  float topEdge = height/2 - sizeOfInputArea/2 + lbScale/2;
+  topRow = initializeLetterBubbles("qwertyuiop", leftEdge, topEdge, lbXDistance);
+  middleRow = initializeLetterBubbles("asdfghjkl", leftEdge + rowOffset, topEdge + lbScale + lbYDistance, lbXDistance);
+  bottomRow = initializeLetterBubbles("zxcvbnm", leftEdge + rowOffset * 2.5, topEdge + lbScale*2 + lbYDistance*2, lbXDistance);
+
 }
+
+void drawLetterBubbles(ArrayList<LetterBubble> lbList){
+  for (LetterBubble lb : lbList){
+    fill(buttonColor[0],buttonColor[1],buttonColor[2]);
+    stroke(0,0,0);
+    circle(lb.x,lb.y,lb.scale);
+    fill(textColor[0],textColor[1],textColor[2]);
+    textSize(textSize);
+    text(lb.letter, lb.x - textXOffset, lb.y - textYOffset);
+  }
+}
+
 
 //You can modify anything in here. This is just a basic implementation.
 void draw()
@@ -82,50 +148,78 @@ void draw()
     text("NEXT > ", 650, 650); //draw next label
 
     //example design draw code
-    fill(255, 0, 0); //red button
-    rect(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw left red button
-    fill(0, 255, 0); //green button
-    rect(width/2-sizeOfInputArea/2+sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
-    textAlign(CENTER);
-    fill(200);
-    text("" + currentLetter, width/2, height/2-sizeOfInputArea/4); //draw current letter
+  //  fill(255, 0, 0); //red button
+  //  rect(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw left red button
+  //  fill(0, 255, 0); //green button
+  //  rect(width/2-sizeOfInputArea/2+sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2); //draw right green button
+  //  textAlign(CENTER);
+  //  fill(200);
+  //  text("" + currentLetter, width/2, height/2-sizeOfInputArea/4); //draw current letter
+  //}
+  
+
   }
- 
-   drawFinger(); //this is your "cursor"
+  drawLetterBubbles(topRow);
+  drawLetterBubbles(middleRow);
+  drawLetterBubbles(bottomRow); 
+  drawFinger(); //this is your "cursor"
 }
 
-//my terrible implementation you can entirely replace
+boolean mouseWithinLetterBubble(LetterBubble lb)
+{
+  float x = lb.x;
+  float y = lb.y;
+  float radius = lbScale/2;
+  //System.out.println("MouseX: " + mouseX);
+  //System.out.println("MouseY: " + mouseY);
+  //System.out.println("X Bounds: (" + (logoSquare.x - logoZ/2) + "," + (logoSquare.x + logoZ/2) + ")");
+  //System.out.println("Y Bounds: (" + (logoSquare.y - logoZ/2) + "," + (logoSquare.y + logoZ/2) + ")");
+  
+  if (sqrt(sq(mouseX - x) + sq(mouseY - y)) <= radius) {
+    return true;
+  }
+  
+  return false;
+}
+
 boolean didMouseClick(float x, float y, float w, float h) //simple function to do hit testing
 {
   return (mouseX > x && mouseX<x+w && mouseY>y && mouseY<y+h); //check to see if it is in button bounds
 }
 
+
+
 //my terrible implementation you can entirely replace
 void mousePressed()
 {
-  if (didMouseClick(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
-  {
-    currentLetter --;
-    if (currentLetter<'_') //wrap around to z
-      currentLetter = 'z';
+  for (LetterBubble lb: allLetterBubbles){
+    if (mouseWithinLetterBubble(lb)){
+      currentTyped += lb.letter;
+    }
   }
+  //if (didMouseClick(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in left button
+  //{
+  //  currentLetter --;
+  //  if (currentLetter<'_') //wrap around to z
+  //    currentLetter = 'z';
+  //}
 
-  if (didMouseClick(width/2-sizeOfInputArea/2+sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in right button
-  {
-    currentLetter ++;
-    if (currentLetter>'z') //wrap back to space (aka underscore)
-      currentLetter = '_';
-  }
+  //if (didMouseClick(width/2-sizeOfInputArea/2+sizeOfInputArea/2, height/2-sizeOfInputArea/2+sizeOfInputArea/2, sizeOfInputArea/2, sizeOfInputArea/2)) //check if click in right button
+  //{
+  //  currentLetter ++;
+  //  if (currentLetter>'z') //wrap back to space (aka underscore)
+  //    currentLetter = '_';
+  //}
 
-  if (didMouseClick(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2, sizeOfInputArea, sizeOfInputArea/2)) //check if click occured in letter area
-  {
-    if (currentLetter=='_') //if underscore, consider that a space bar
-      currentTyped+=" ";
-    else if (currentLetter=='`' & currentTyped.length()>0) //if `, treat that as a delete command
-      currentTyped = currentTyped.substring(0, currentTyped.length()-1);
-    else if (currentLetter!='`') //if not any of the above cases, add the current letter to the typed string
-      currentTyped+=currentLetter;
-  }
+  //if (didMouseClick(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2, sizeOfInputArea, sizeOfInputArea/2)) //check if click occured in letter area
+  //{
+  //  if (currentLetter=='_') //if underscore, consider that a space bar
+  //    currentTyped+=" ";
+  //  else if (currentLetter=='`' & currentTyped.length()>0) //if `, treat that as a delete command
+  //    currentTyped = currentTyped.substring(0, currentTyped.length()-1);
+  //  else if (currentLetter!='`') //if not any of the above cases, add the current letter to the typed string
+  //    currentTyped+=currentLetter;
+  //}
 
   //You are allowed to have a next button outside the 1" area
   if (didMouseClick(600, 600, 200, 200)) //check if click is in next button
