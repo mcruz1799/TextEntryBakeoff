@@ -22,27 +22,54 @@ PImage finger;
 char currentLetter = 'a';
 
 int vowelTextSize = 20; //size of vowel in the center of the button
-int otherTextSize = 12; //size of the consonant in the corners of the button
+int consonantTextSize = 12; //size of the consonant in the corners of the button
 
-int[] buttonColor = {255,0,0};
-int[] textColor = {255,255,255};
+int[] vowelSquareColor = {255,0,0};
+int[] vowelTextColor = {255,255,255};
+
+int[] consonantSquareColor = {0,255,0};
+int[] consonantTextColor = {255,255,255};
 
 int numRows = 2;
 int numCols = 3;
-float buttonWidth = sizeOfInputArea/numCols;
-float buttonHeight = sizeOfInputArea/numRows;
+float vowelSquareWidth = sizeOfInputArea/numCols;
+float vowelSquareHeight = sizeOfInputArea/numRows;
+
+float consonantSquareWidth = vowelSquareWidth/3;
+float consonantSquareHeight = vowelSquareHeight/4;
+
+float xpadding = 8;
+float ypadding = 12;
+
+
+boolean isDragging;
+VowelSquare currVowel;
+
 
 ArrayList<VowelSquare> vowelSquares;
 class VowelSquare {
   String letters;
   float x; 
   float y; 
+  ArrayList <ConsonantSquare> consonantSquares;
   VowelSquare(String _letters, float _x, float _y) {
     letters = _letters; 
     x = _x;
     y = _y;
+    consonantSquares = new ArrayList<ConsonantSquare>();
   }
   
+}
+
+class ConsonantSquare {
+  char consonant;
+  float x;
+  float y;
+  ConsonantSquare(char _consonant, float _x, float _y){
+    consonant = _consonant;
+    x = _x;
+    y = _y;
+  }
 }
 
 
@@ -65,14 +92,19 @@ void setup()
   textFont(createFont("Arial", 24)); //set the font to arial 24. Creating fonts is expensive, so make difference sizes once in setup, not draw
   noStroke(); //my code doesn't use any strokes
   
+  initializeVowelSquares(); //sets up vowel squares and consonant squares with appropriate values
+  
 
   
+}
+
+void initializeVowelSquares(){
   //initialize vowel squares
   vowelSquares = new ArrayList<VowelSquare>();
 
   //initial x and y for first vs
-  float buttonX = width/2 - sizeOfInputArea/2 + buttonWidth/2;
-  float buttonY = height/2 - sizeOfInputArea/2 + buttonHeight/2;
+  float buttonX = width/2 - sizeOfInputArea/2 + vowelSquareWidth/2;
+  float buttonY = height/2 - sizeOfInputArea/2 + vowelSquareHeight/2;
   //create array list of all the letters separated by button
   ArrayList<String> alphabetList = new ArrayList<String>();
     alphabetList.add("abcd");
@@ -86,28 +118,71 @@ void setup()
   for (int i = 0; i < numRows; i++){
     for (int j = 0; j < numCols; j++){
       VowelSquare newVS = new VowelSquare(alphabetList.get(count), 
-                                          buttonX + buttonWidth * j, 
-                                          buttonY + buttonHeight * i);
+                                          buttonX + vowelSquareWidth * j, 
+                                          buttonY + vowelSquareHeight * i);
       vowelSquares.add(newVS);
+      System.out.println("VowelSquare: " + newVS.letters.charAt(0) + " (" + newVS.x + ", " + newVS.y + ")");
+      String consonants = newVS.letters.substring(1);
+      if (consonants.length() == 3) initialize3ConsonantSquares(newVS, consonants,xpadding, ypadding);
+      else initialize5ConsonantSquares(newVS, consonants, xpadding, ypadding);
+      
       count++;
     }
   }
-  
 }
 
-void drawVowelSquare(VowelSquare vs){
+void initialize3ConsonantSquares(VowelSquare vs, String letters, float xpadding, float ypadding){
+  //draw consonants
+  //topleft
+  float tlX = vs.x - vowelSquareWidth/2 + xpadding;
+  float tlY = vs.y - vowelSquareHeight/2 + ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(0), tlX, tlY));
+  //topRight
+  float trX = vs.x + vowelSquareWidth/2 - xpadding;
+  float trY = vs.y - vowelSquareHeight/2 + ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(1), trX, trY));
+  //bottomRight
+  float brX = vs.x + vowelSquareWidth/2 - xpadding;
+  float brY = vs.y + vowelSquareHeight/2 - ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(2), brX, brY));
+}
+
+void initialize5ConsonantSquares(VowelSquare vs, String letters, float xpadding, float ypadding){
+  //topleft
+  float tlX = vs.x - vowelSquareWidth/2 + xpadding;
+  float tlY = vs.y - vowelSquareHeight/2 + ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(0), tlX, tlY));
+  //topRight
+  float trX = vs.x + vowelSquareWidth/2 - xpadding;
+  float trY = vs.y - vowelSquareHeight/2 + ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(1), trX, trY));
+  //middleRight
+  float mrX = vs.x + vowelSquareWidth/2 - xpadding;
+  float mrY = vs.y;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(2), mrX, mrY));
+  //bottomRight
+  float brX = vs.x + vowelSquareWidth/2 - xpadding;
+  float brY = vs.y + vowelSquareHeight/2 - ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(3), brX, brY));
+  //bottomLeft
+  float blX = vs.x - vowelSquareWidth/2 + xpadding;
+  float blY = vs.y + vowelSquareHeight/2 - ypadding;
+  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(4), blX, blY));
+}
+
+void drawSquare(char letter, int[] squareColor, float x, float y, float w, float h, int textSize, int[] textColor){
   //draw square
-  char vowel = vs.letters.charAt(0);
-  String letters = vs.letters.substring(1);
-  fill(buttonColor[0],buttonColor[1],buttonColor[2]);
+  fill(squareColor[0],squareColor[1],squareColor[2]);
   stroke(0,0,0);
   rectMode(CENTER);
-  rect(vs.x,vs.y, buttonWidth, buttonHeight);
+  rect(x,y,w,h);
+  
   //draw vowel
   rectMode(CENTER);
-  textSize(vowelTextSize);
+  textSize(textSize);
   fill(textColor[0],textColor[1],textColor[2]);
-  text(vowel, vs.x, vs.y);
+  text(letter, x, y);
+  
 }
 
 
@@ -158,7 +233,10 @@ void draw()
   }
   textAlign(CENTER);
   for (VowelSquare vs: vowelSquares){
-    drawVowelSquare(vs);
+    drawSquare(vs.letters.charAt(0), vowelSquareColor, vs.x, vs.y, vowelSquareWidth, vowelSquareHeight, vowelTextSize, vowelTextColor);
+    for (ConsonantSquare cs: vs.consonantSquares){
+      drawSquare(cs.consonant, consonantSquareColor, cs.x, cs.y, consonantSquareWidth, consonantSquareHeight, consonantTextSize, consonantTextColor);
+    }
   }
   
   drawFinger(); //this is your "cursor"
@@ -167,15 +245,6 @@ void draw()
   
 }
 
-boolean mouseWithinVowelSquare(VowelSquare vs){
-  float x = vs.x - buttonWidth/2;
-  float y = vs.y - buttonWidth/2;
-  
-  if (didMouseClick(vs.x - buttonWidth/2, vs.y - buttonWidth/2, buttonWidth, buttonHeight)){
-    return true;
-  }
-  return false;
-}
 
 boolean didMouseClick(float x, float y, float w, float h) //simple function to do hit testing
 {
@@ -189,8 +258,10 @@ void mousePressed()
 {
   
   for (VowelSquare vs: vowelSquares){
-    if (mouseWithinVowelSquare(vs)){
-      
+    if (didMouseClick(vs.x, vs.y, vowelSquareWidth, vowelSquareHeight)){
+      System.out.println("DRAGGING ON VOWEL: " + vs.letters.charAt(0));
+      isDragging = true;
+      currVowel = vs;
     }
   }
   
@@ -201,6 +272,24 @@ void mousePressed()
   }
 }
 
+void mouseReleased()
+{
+  if (isDragging && currVowel != null)
+  {
+    boolean inputChosen = false;
+    for (ConsonantSquare cs: currVowel.consonantSquares){
+      if (didMouseClick(cs.x,cs.y,consonantSquareWidth,consonantSquareHeight)){
+        currentTyped += cs.consonant;
+        inputChosen = true;
+      }
+    }
+    if (inputChosen == false){
+      currentTyped += currVowel.letters.charAt(0);
+    }
+    isDragging = false;
+    currVowel = null;
+  }
+}
 
 void nextTrial()
 {
