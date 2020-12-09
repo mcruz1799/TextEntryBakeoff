@@ -21,61 +21,20 @@ PImage finger;
 //Variables for my silly implementation. You can delete this:
 char currentLetter = 'a';
 
-int vowelTextSize = 20; //size of vowel in the center of the button
-int consonantTextSize = 12; //size of the consonant in the corners of the button
+//ADDED CODE
+int snb = 3; //square root number of blocks
+float bsze = sizeOfInputArea/snb;
+float x0 = width/2-sizeOfInputArea/2; //(snb/2.0)*bsze;
+float y0 = height/2-sizeOfInputArea/2; //-(snb/2.0)*bsze;
+boolean bcol = true;
+char[] letters = {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'p', '<', ' '};
+int cnt = 0;
 
-int[] vowelSquareColor = {255,0,0};
-int[] vowelTextColor = {255,255,255};
-
-int[] consonantSquareColor = {0,255,0};
-int[] consonantTextColor = {255,255,255};
-
-int numRows = 2;
-int numCols = 3;
-float vowelSquareWidth = sizeOfInputArea/numCols;
-float vowelSquareHeight = sizeOfInputArea/numRows;
-
-float consonantSquareWidth = vowelSquareWidth/3;
-float consonantSquareHeight = vowelSquareHeight/4;
-
-float xpadding = 8;
-float ypadding = 12;
-
-
-boolean isDragging;
-VowelSquare currVowel;
-
-
-ArrayList<VowelSquare> vowelSquares;
-class VowelSquare {
-  String letters;
-  float x; 
-  float y; 
-  ArrayList <ConsonantSquare> consonantSquares;
-  VowelSquare(String _letters, float _x, float _y) {
-    letters = _letters; 
-    x = _x;
-    y = _y;
-    consonantSquares = new ArrayList<ConsonantSquare>();
-  }
-  
-}
-
-class ConsonantSquare {
-  char consonant;
-  float x;
-  float y;
-  ConsonantSquare(char _consonant, float _x, float _y){
-    consonant = _consonant;
-    x = _x;
-    y = _y;
-  }
-}
-
-
-
-
-
+int clkX = 0;
+int clkY = 0;
+int relX = 0;
+int relY = 0;
+int clkblk = 0;
 
 //You can modify anything in here. This is just a basic implementation.
 void setup()
@@ -91,100 +50,7 @@ void setup()
   size(800, 800); //Sets the size of the app. You should modify this to your device's native size. Many phones today are 1080 wide by 1920 tall.
   textFont(createFont("Arial", 24)); //set the font to arial 24. Creating fonts is expensive, so make difference sizes once in setup, not draw
   noStroke(); //my code doesn't use any strokes
-  
-  initializeVowelSquares(); //sets up vowel squares and consonant squares with appropriate values
-  
-
-  
 }
-
-void initializeVowelSquares(){
-  //initialize vowel squares
-  vowelSquares = new ArrayList<VowelSquare>();
-
-  //initial x and y for first vs
-  float buttonX = width/2 - sizeOfInputArea/2 + vowelSquareWidth/2;
-  float buttonY = height/2 - sizeOfInputArea/2 + vowelSquareHeight/2;
-  //create array list of all the letters separated by button
-  ArrayList<String> alphabetList = new ArrayList<String>();
-    alphabetList.add("abcd");
-    alphabetList.add("efgh");
-    alphabetList.add("ijklmn");
-    alphabetList.add("opqrst");
-    alphabetList.add("uvwx");
-    alphabetList.add("yz<_");
-  //loop that initializes the squares with their appropriate positions into the vowelSquares ArrayList
-  int count = 0;
-  for (int i = 0; i < numRows; i++){
-    for (int j = 0; j < numCols; j++){
-      VowelSquare newVS = new VowelSquare(alphabetList.get(count), 
-                                          buttonX + vowelSquareWidth * j, 
-                                          buttonY + vowelSquareHeight * i);
-      vowelSquares.add(newVS);
-      System.out.println("VowelSquare: " + newVS.letters.charAt(0) + " (" + newVS.x + ", " + newVS.y + ")");
-      String consonants = newVS.letters.substring(1);
-      if (consonants.length() == 3) initialize3ConsonantSquares(newVS, consonants,xpadding, ypadding);
-      else initialize5ConsonantSquares(newVS, consonants, xpadding, ypadding);
-      
-      count++;
-    }
-  }
-}
-
-void initialize3ConsonantSquares(VowelSquare vs, String letters, float xpadding, float ypadding){
-  //draw consonants
-  //topleft
-  float tlX = vs.x - vowelSquareWidth/2 + xpadding;
-  float tlY = vs.y - vowelSquareHeight/2 + ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(0), tlX, tlY));
-  //topRight
-  float trX = vs.x + vowelSquareWidth/2 - xpadding;
-  float trY = vs.y - vowelSquareHeight/2 + ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(1), trX, trY));
-  //bottomRight
-  float brX = vs.x + vowelSquareWidth/2 - xpadding;
-  float brY = vs.y + vowelSquareHeight/2 - ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(2), brX, brY));
-}
-
-void initialize5ConsonantSquares(VowelSquare vs, String letters, float xpadding, float ypadding){
-  //topleft
-  float tlX = vs.x - vowelSquareWidth/2 + xpadding;
-  float tlY = vs.y - vowelSquareHeight/2 + ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(0), tlX, tlY));
-  //topRight
-  float trX = vs.x + vowelSquareWidth/2 - xpadding;
-  float trY = vs.y - vowelSquareHeight/2 + ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(1), trX, trY));
-  //middleRight
-  float mrX = vs.x + vowelSquareWidth/2 - xpadding;
-  float mrY = vs.y;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(2), mrX, mrY));
-  //bottomRight
-  float brX = vs.x + vowelSquareWidth/2 - xpadding;
-  float brY = vs.y + vowelSquareHeight/2 - ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(3), brX, brY));
-  //bottomLeft
-  float blX = vs.x - vowelSquareWidth/2 + xpadding;
-  float blY = vs.y + vowelSquareHeight/2 - ypadding;
-  vs.consonantSquares.add(new ConsonantSquare(letters.charAt(4), blX, blY));
-}
-
-void drawSquare(char letter, int[] squareColor, float x, float y, float w, float h, int textSize, int[] textColor){
-  //draw square
-  fill(squareColor[0],squareColor[1],squareColor[2]);
-  stroke(0,0,0);
-  rectMode(CENTER);
-  rect(x,y,w,h);
-  
-  //draw vowel
-  rectMode(CENTER);
-  textSize(textSize);
-  fill(textColor[0],textColor[1],textColor[2]);
-  text(letter, x, y);
-  
-}
-
 
 //You can modify anything in here. This is just a basic implementation.
 void draw()
@@ -192,7 +58,7 @@ void draw()
   background(255); //clear background
   drawWatch(); //draw watch background
   fill(100);
-  //rect(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2, sizeOfInputArea, sizeOfInputArea); //input area should be 1" by 1"
+  rect(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2, sizeOfInputArea, sizeOfInputArea); //input area should be 1" by 1"
   
   if (finishTime!=0)
   {
@@ -230,41 +96,62 @@ void draw()
     fill(255);
     text("NEXT > ", 650, 650); //draw next label
 
-  }
-  textAlign(CENTER);
-  for (VowelSquare vs: vowelSquares){
-    drawSquare(vs.letters.charAt(0), vowelSquareColor, vs.x, vs.y, vowelSquareWidth, vowelSquareHeight, vowelTextSize, vowelTextColor);
-    for (ConsonantSquare cs: vs.consonantSquares){
-      drawSquare(cs.consonant, consonantSquareColor, cs.x, cs.y, consonantSquareWidth, consonantSquareHeight, consonantTextSize, consonantTextColor);
+    //example design draw code
+    cnt = 0;
+    bcol = true;
+    x0 = width/2-(snb/2.0)*bsze;
+    y0 = height/2-(snb/2.0)*bsze;
+    //translate(width/2-sizeOfInputArea/2, height/2-sizeOfInputArea/2);
+    for (int ry = 0; ry <= snb-1; ry++){
+       for (int rx = 0; rx <= snb-1; rx++){
+         if (bcol){
+           fill(0, 0, 0); //green button
+         }else{
+           fill(30, 30, 30); //green button
+         }
+         rect(x0+rx*bsze, y0+ry*bsze, bsze, bsze);
+         textAlign(CENTER);
+         fill(200);
+         textSize(18);
+         text("" + letters[cnt] + letters[cnt+1] + letters[cnt+2], x0+rx*bsze+0.5*bsze, y0+ry*bsze+0.5*bsze); //draw current letter
+         bcol = !bcol;
+         cnt = cnt + 3;
+       }
     }
+    
   }
-  
-  drawFinger(); //this is your "cursor"
-  
-
-  
+ 
+   drawFinger(); //this is your "cursor"
 }
 
-
+//my terrible implementation you can entirely replace
 boolean didMouseClick(float x, float y, float w, float h) //simple function to do hit testing
 {
   return (mouseX > x && mouseX<x+w && mouseY>y && mouseY<y+h); //check to see if it is in button bounds
 }
+
+boolean didMouseClick2(int mseX, int mseY, float x, float y, float w, float h) //simple function to do hit testing
+{
+  return (mseX > x && mseX<x+w && mseY>y && mseY<y+h); //check to see if it is in button bounds
+} 
 
 
 
 //my terrible implementation you can entirely replace
 void mousePressed()
 {
+  clkX = mouseX;
+  clkY = mouseY;
+  //print("Clicked = (" + clkX + ":" + clkY + ")");
   
-  for (VowelSquare vs: vowelSquares){
-    if (didMouseClick(vs.x, vs.y, vowelSquareWidth, vowelSquareHeight)){
-      System.out.println("DRAGGING ON VOWEL: " + vs.letters.charAt(0));
-      isDragging = true;
-      currVowel = vs;
-    }
+  for (int ry = 0; ry <= snb-1; ry++){
+       for (int rx = 0; rx <= snb-1; rx++){
+         if (didMouseClick(x0+rx*bsze, y0+ry*bsze, bsze, bsze)){
+           clkblk = 3*ry + rx;  
+         }
+       }
   }
-  
+    
   //You are allowed to have a next button outside the 1" area
   if (didMouseClick(600, 600, 200, 200)) //check if click is in next button
   {
@@ -272,22 +159,48 @@ void mousePressed()
   }
 }
 
+
 void mouseReleased()
 {
-  if (isDragging && currVowel != null)
-  {
-    boolean inputChosen = false;
-    for (ConsonantSquare cs: currVowel.consonantSquares){
-      if (didMouseClick(cs.x,cs.y,consonantSquareWidth,consonantSquareHeight)){
-        currentTyped += cs.consonant;
-        inputChosen = true;
+  relX = mouseX;
+  relY = mouseY;
+  float deltX = clkX - relX;
+  float deltY = clkY - relY;
+  int letterDir = 99;
+  int charind = 0;
+ 
+  
+  if ((deltX*deltX + deltY*deltY) > bsze*bsze/16){
+    
+      if ((deltY > deltX)  && (deltY < -deltX)){
+          letterDir = 2;  
       }
-    }
-    if (inputChosen == false){
-      currentTyped += currVowel.letters.charAt(0);
-    }
-    isDragging = false;
-    currVowel = null;
+      
+      if ((deltY > deltX)  && (deltY > -deltX)){
+          letterDir = 1;  
+      }
+      
+      if ((deltY < deltX)  && (deltY > -deltX)){
+          letterDir = 0;  
+      }
+      
+      charind = clkblk * 3 + letterDir;
+      
+      //Overwrite if down swipe for space
+      if ((deltY < deltX)  && (deltY < -deltX)){
+          charind = 27;  
+      }
+      
+      print("| clkblk = " + clkblk);
+      print("; letterDir = " + letterDir);
+      print("; charind = " + charind);
+      
+      if (charind == 26){ //if `, treat that as a delete command
+        currentTyped = currentTyped.substring(0, currentTyped.length()-1);
+      }else{
+        currentLetter = letters[charind];
+        currentTyped+=currentLetter;
+      }
   }
 }
 
@@ -380,7 +293,7 @@ void drawFinger()
   ellipse(0,0,5,5);
 
   popMatrix();
-  }
+}
   
 
 //=========SHOULD NOT NEED TO TOUCH THIS METHOD AT ALL!==============
